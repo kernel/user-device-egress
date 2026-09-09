@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Offline AWS CLI double. Never calls a real AWS service.
+set -euo pipefail
+printf '%q ' "$@" >> "$RELAY_TEST_LOG"
+printf '\n' >> "$RELAY_TEST_LOG"
+if [[ "${1:-}" == --region ]]; then
+  shift 2
+fi
+case "$*" in
+  'configure get region') printf 'us-west-2\n' ;;
+  'sts get-caller-identity '*) printf '000000000000\n' ;;
+  'cloudformation validate-template '*) ;;
+  'cloudformation deploy '*)
+    printf 'AWS deployment progress\n'
+    exit "${RELAY_TEST_DEPLOY_EXIT:-0}"
+    ;;
+  'cloudformation describe-stacks '*)
+    [[ "${RELAY_TEST_DESCRIBE_EXIT:-0}" == 0 ]] || exit "$RELAY_TEST_DESCRIBE_EXIT"
+    if [[ "$*" == *'Stacks[0].StackId'* ]]; then
+      printf 'arn:aws:cloudformation:us-west-2:000000000000:stack/test-relay/exact-id\n'
+    else
+      # Deliberately hostile-looking output for quoting tests.
+      # shellcheck disable=SC2016
+      printf '%s\t%s\n' \
+        StackId arn:aws:cloudformation:us-west-2:000000000000:stack/test-relay/exact-id \
+        Region us-west-2 \
+        InstanceName test-relay-relay \
+        StaticIp 192.0.2.20 \
+        SshUser ubuntu \
+        SshKeyPair 'literal-$(echo injected); spaced key' \
+        TenantPortStart 20000 \
+        TenantPortEnd 20009
+    fi
+    ;;
+  'cloudformation delete-stack '*|'cloudformation wait stack-delete-complete '*) ;;
+  *) printf 'Unexpected AWS call: %s\n' "$*" >&2; exit 1 ;;
+esac

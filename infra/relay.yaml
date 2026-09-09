@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Shared tunnel relay infrastructure; website egress happens on connected Macs.
+
+Parameters:
+  SshCidr:
+    Type: String
+    Description: IPv4 CIDR allowed to reach administrative SSH. Tenant tunnel service is a later step.
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/\d{1,2}'
+  ProxyCidr:
+    Type: String
+    Default: 0.0.0.0/0
+    Description: IPv4 CIDR allowed to reach the tenant TLS ports.
+    AllowedPattern: '(\d{1,3}\.){3}\d{1,3}/\d{1,2}'
+  TunnelPortStart:
+    Type: Number
+    Default: 40000
+    MinValue: 40000
+    MaxValue: 49999
+    Description: First tenant-only SSH port; must be TenantPortStart plus 20000.
+  TunnelPortEnd:
+    Type: Number
+    Default: 40009
+    MinValue: 40000
+    MaxValue: 49999
+    Description: Last tenant-only SSH port; must be TenantPortEnd plus 20000.
+  KeyPairName:
+    Type: String
+    Default: ''
+    Description: Existing regional Lightsail SSH key pair; empty uses the Lightsail default.
+  BlueprintId:
+    Type: String
+    Default: ubuntu_24_04
+    Description: Lightsail image. Cannot be changed in place after creation.
+  BundleId:
+    Type: String
+    Default: micro_3_0
+    Description: Lightsail plan with public IPv4. Cannot be changed in place after creation.
+  TenantPortStart:
+    Type: Number
+    Default: 20000
+    MinValue: 20000
+    MaxValue: 29999
+    Description: First public TLS port, one per tenant. Corresponding tunnel port is this plus 10000.
+  TenantPortEnd:
+    Type: Number
+    Default: 20009
+    MinValue: 20000
+    MaxValue: 29999
+    Description: Last public TLS port (inclusive); must be at least TenantPortStart.
+
+Conditions:
+  HasKeyPair: !Not [!Equals [!Ref KeyPairName, '']]
+
+Resources:
+  Relay:
+    Type: AWS::Lightsail::Instance
+    Properties:
+      InstanceName: !Sub '${AWS::StackName}-relay'
+      AvailabilityZone: !Select [0, !GetAZs '']
+      BlueprintId: !Ref BlueprintId
+      BundleId: !Ref BundleId
+      KeyPairName: !If [HasKeyPair, !Ref KeyPairName, !Ref 'AWS::NoValue']
+      Networking:
+        Ports:
+          - Protocol: tcp
+            FromPort: 22
+            ToPort: 22
+            Cidrs: [!Ref SshCidr]
+            CidrListAliases: [lightsail-connect]
+            Ipv6Cidrs: []
+          # Certbot briefly listens here during IP certificate issuance/renewal.
+          - Protocol: tcp
+            FromPort: 80
+            ToPort: 80
+            Cidrs: [0.0.0.0/0]
+            Ipv6Cidrs: []
+          - Protocol: tcp
+            FromPort: !Ref TenantPortStart
+            ToPort: !Ref TenantPortEnd
+            Cidrs: [!Ref ProxyCidr]
+            Ipv6Cidrs: []
+          - Protocol: tcp
+            FromPort: !Ref TunnelPortStart
+            ToPort: !Ref TunnelPortEnd
+            Cidrs: [0.0.0.0/0]
+            Ipv6Cidrs: []
+      Tags:
+        - Key: Application
+          Value: mac-egress-relay
+
+  RelayIp:
+    Type: AWS::Lightsail::StaticIp
+    Properties:
+      StaticIpName: !Sub '${AWS::StackName}-ip'
+      AttachedTo: !Ref Relay
+
+Outputs:
+  StackId:
+    Value: !Ref AWS::StackId
+  Region:
+    Value: !Ref AWS::Region
+  InstanceName:
+    Value: !Ref Relay
+  StaticIp:
+    Value: !GetAtt RelayIp.IpAddress
+  SshUser:
+    Value: !GetAtt Relay.UserName
+  SshKeyPair:
+    Value: !GetAtt Relay.SshKeyName
+  TenantPortStart:
+    Value: !Ref TenantPortStart
+  TenantPortEnd:
+    Value: !Ref TenantPortEnd
+  TunnelPortStart:
+    Value: !Ref TunnelPortStart
+  TunnelPortEnd:
+    Value: !Ref TunnelPortEnd

@@ -1,0 +1,11 @@
+.local/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.DS_Store
+__pycache__/
+DerivedData/
+xcuserdata/
+*.xcuserstate
