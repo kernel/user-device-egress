@@ -2,6 +2,8 @@
 
 A foreground iOS app that opens a phone-egress tunnel, creates a temporary Kernel proxy/browser, and shows real screenshots of that browser checking its public IP. After one-time enrollment, **Start live demo** runs everything on the phone.
 
+[How it works, with a sequence diagram](how-it-works.md)
+
 ```text
 Kernel browser → HTTPS relay → reverse SSH tunnel → iPhone → IP-check site
 ```

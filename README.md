@@ -12,6 +12,8 @@ Kernel browser → HTTPS relay → reverse SSH tunnel → Mac → website
 
 This demonstrates routing—not improved checkout success. The prototype only allows two IP-check services and Kernel's health-check host.
 
+[How it works: architecture and sequence diagram](docs/how-it-works.md)
+
 ![Mac Egress sharing a verified internet connection](docs/mac-egress.png)
 
 ## Contents
