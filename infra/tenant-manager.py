@@ -52,6 +52,22 @@ frontend health
     http-request return status 200 content-type text/plain string "Relay healthy."
 '''
     active = {t['port']: t for t in tenants.values() if t['active']}
+    if (STATE / 'pairing-enabled').exists():
+        cfg += '''
+listen pairing
+    mode http
+    bind 0.0.0.0:443 ssl crt /etc/haproxy/certs/relay.pem alpn http/1.1
+    maxconn 32
+    timeout http-request 5s
+    timeout client 55s
+    timeout server 55s
+    stick-table type ip size 10k expire 1m store http_req_rate(1m)
+    http-request track-sc0 src
+    http-request deny deny_status 429 if { sc_http_req_rate(0) gt 30 }
+    http-request deny deny_status 404 unless METH_POST
+    http-request deny deny_status 404 unless { path -m str /v1/pair }
+    server pairing 127.0.0.1:19998
+'''
     for port in range(settings['first'], settings['last'] + 1):
         cfg += f'\nlisten port_{port}\n'
         if port not in active:

@@ -74,6 +74,12 @@ Resources:
             ToPort: 80
             Cidrs: [0.0.0.0/0]
             Ipv6Cidrs: []
+          # Single-use device pairing; HAProxy uses the existing IP certificate.
+          - Protocol: tcp
+            FromPort: 443
+            ToPort: 443
+            Cidrs: [0.0.0.0/0]
+            Ipv6Cidrs: []
           - Protocol: tcp
             FromPort: !Ref TenantPortStart
             ToPort: !Ref TenantPortEnd

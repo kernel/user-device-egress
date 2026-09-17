@@ -1,4 +1,4 @@
-package main
+package connectproxy
 
 import (
 	"bufio"
@@ -31,8 +31,8 @@ func TestPublicIP(t *testing.T) {
 
 const authorization = "Basic dXNlcjpwYXNzd29yZA=="
 
-func testProxy(ctx context.Context) *proxy {
-	return &proxy{ctx: ctx, auth: sha256.Sum256([]byte(authorization)), hosts: map[string]bool{"allowed.test": true}, slots: make(chan struct{}, 1)}
+func testProxy(ctx context.Context) *Proxy {
+	return &Proxy{ctx: ctx, auth: sha256.Sum256([]byte(authorization)), hosts: map[string]bool{"allowed.test": true}, slots: make(chan struct{}, 1)}
 }
 
 func TestDeniedRequestsNeverDial(t *testing.T) {

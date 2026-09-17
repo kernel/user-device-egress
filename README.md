@@ -1,6 +1,8 @@
-# Mac egress for Kernel browsers
+# User-device egress for Kernel browsers
 
 A macOS menu-bar app that lets a Kernel cloud browser use your Mac's internet connection through a shared AWS relay.
+
+**iPhone experiment:** [foreground demo setup](docs/ios-demo.md)—QR pairing, a temporary Kernel browser, and a live screenshot feed. A foreground end-to-end run has been user-confirmed on an iPhone Air; background operation remains unproven.
 
 ```text
 Kernel browser → HTTPS relay → reverse SSH tunnel → Mac → website
@@ -15,6 +17,7 @@ This demonstrates routing—not improved checkout success. The prototype only al
 ## Contents
 
 - `MacEgress/` — SwiftUI app: consent, Start/Stop, Keychain storage, exit IP, traffic counters.
+- `iOSEgress/`, `mobile/` — foreground iPhone demo and embedded Go SSH tunnel; `internal/connectproxy/` is shared with Mac.
 - `cmd/` — bundled Go proxy and session supervisor.
 - `infra/` — Lightsail CloudFormation template, TLS, per-device enrollment.
 - `scripts/`, `tests/` — deployment, browser verification, cleanup, and tests.
@@ -23,7 +26,7 @@ This demonstrates routing—not improved checkout success. The prototype only al
 
 Run commands from the repository root. Already enrolled? Skip to step 3.
 
-- **Build:** macOS 14.6+, Xcode (tested with 26.5), Go 1.24+.
+- **Build:** macOS 14.6+, Xcode (tested with 26.5), Go 1.26+.
 - **Relay setup:** AWS CLI v2 with CloudFormation/Lightsail credentials, jq, SSH, curl.
 - **Browser test:** Python 3, Kernel CLI (tested with 0.34.0), `KERNEL_API_KEY` in your environment.
 

@@ -18,6 +18,10 @@ Let a user explicitly share their Mac's internet connection with a Kernel browse
 
 Routing is the current result. Improved checkout success is still a hypothesis.
 
-Defer iOS, TLS interception, self-service enrollment, and high availability.
+## iOS track
+
+The [foreground iPhone demo](docs/ios-demo.md) now includes QR pairing, phone-managed Kernel resources, and real browser screenshots. An initial end-to-end run is user-confirmed on iPhone Air; the [remaining network/lifecycle checks](docs/ios-foreground-plan.md) are still open. Foreground-only operation is a technical milestone, not the intended product experience. The separately scoped [BGContinuedProcessingTask experiment](docs/ios-background-follow-up.md) is not implemented.
+
+Defer TLS interception, production consumer onboarding, and high availability.
 
 Setup: [README.md](README.md). Tests and maintenance: [DEVELOPMENT.md](DEVELOPMENT.md).
