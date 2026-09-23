@@ -1,27 +1,21 @@
 # Goal and next steps
 
-Let a user explicitly share their Mac's internet connection with a Kernel browser, verify its exit IP, and stop sharing reliably.
+Let a user start a cloud-browser task that uses their device's internet connection, continues when they leave the iPhone app, and stops sharing reliably.
 
-## Proven
+## Demonstrated
 
-- Stable Lightsail endpoint with automatic TLS renewal and restricted per-device tunnels.
-- A real Kernel browser matches the Mac's public IP; fresh requests fail after revocation.
-- The Swift app model verifies egress and traffic counters, then stops and removes session credentials.
-- Helper tests cover Stop, loss of the app's control pipe, and child failure.
+- Mac egress through a shared Lightsail relay, with verified IP and revocation checks.
+- Foreground iPhone egress with QR pairing and a cloud-browser screenshot feed.
+- Five-minute locked-phone diagnostics on Wi-Fi and cellular; cellular requests also resumed after a 60-second pause. The cellular no-task baseline had no successful background requests.
+
+These are routing and feasibility results, not improved checkout success or production reliability. [Results and scope](docs/ios-background-results.md).
 
 ## Next
 
-1. Finish manual app testing: import/Keychain, Start/Stop, Quit/force-quit, sleep, and network changes.
-2. Test installation and the complete flow on a second Mac; sign and notarize for distribution.
-3. Expand beyond test hosts and check browser traffic bypasses before a merchant trial.
-4. Compare one representative merchant flow against existing routing, controlling browser/profile state and stopping before payment.
+1. Repeat matched background tests and verify cancellation, force-quit, and network-loss behavior.
+2. Add backend-owned onboarding, scoped credentials, agent progress, and an external session lease.
+3. Resolve distribution and security gaps before expanding to general browsing or a merchant trial.
 
-Routing is the current result. Improved checkout success is still a hypothesis.
+The Mac track still needs second-device, manual lifecycle, and signed/notarized distribution checks. Defer TLS interception and high availability.
 
-## iOS track
-
-The [foreground iPhone demo](docs/ios-demo.md) now includes QR pairing, phone-managed Kernel resources, and real browser screenshots. An initial end-to-end run is user-confirmed on iPhone Air; the [remaining network/lifecycle checks](docs/ios-foreground-plan.md) are still open. Foreground-only operation is a technical milestone, not the intended product experience. The separately scoped [BGContinuedProcessingTask experiment](docs/ios-background-follow-up.md) is not implemented.
-
-Defer TLS interception, production consumer onboarding, and high availability.
-
-Setup: [README.md](README.md). Tests and maintenance: [DEVELOPMENT.md](DEVELOPMENT.md).
+[Setup](README.md) · [Background follow-up](docs/ios-background-follow-up.md) · [Developer notes](DEVELOPMENT.md)

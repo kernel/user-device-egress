@@ -27,6 +27,9 @@ import (
 
 var hosts = []string{"checkip.amazonaws.com", "api.ipify.org", "public-ping-bucket-kernel.s3.us-east-1.amazonaws.com"}
 
+// Exact hosts only. Opted into per session; other demos retain their IP-only policy.
+var expediaHosts = []string{"expedia.com", "www.expedia.com", "a.travel-assets.com", "c.travel-assets.com", "images.trvl-media.com", "geo.captcha-delivery.com"}
+
 type manifest struct {
 	Tenant     string `json:"tenant"`
 	IP         string `json:"ip"`
@@ -94,6 +97,14 @@ type Session struct {
 }
 
 func NewSession(enrollment, privateKey string) (*Session, error) {
+	return newSession(enrollment, privateKey, hosts)
+}
+
+func NewExpediaSession(enrollment, privateKey string) (*Session, error) {
+	return newSession(enrollment, privateKey, append(append([]string{}, hosts...), expediaHosts...))
+}
+
+func newSession(enrollment, privateKey string, allowedHosts []string) (*Session, error) {
 	m, pin, err := parseManifest(enrollment)
 	if err != nil {
 		return nil, err
@@ -108,7 +119,7 @@ func NewSession(enrollment, privateKey string) (*Session, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	s := &Session{ctx: ctx, cancel: cancel, manifest: m, signer: signer, hostKey: pin, password: hex.EncodeToString(random[:]), state: "ready"}
-	s.proxy, err = connectproxy.New(ctx, "session", s.password, hosts)
+	s.proxy, err = connectproxy.New(ctx, "session", s.password, allowedHosts)
 	if err != nil {
 		cancel()
 		return nil, err

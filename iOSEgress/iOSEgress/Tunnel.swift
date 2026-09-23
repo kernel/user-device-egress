@@ -17,9 +17,10 @@ struct TunnelSnapshot: Decodable, Sendable {
 final class Tunnel: @unchecked Sendable {
     private let session: MobileSession
 
-    init(manifest: String, key: String) throws {
+    init(manifest: String, key: String, expedia: Bool = false) throws {
         var error: NSError?
-        guard let value = MobileNewSession(manifest, key, &error) else {
+        let value = expedia ? MobileNewExpediaSession(manifest, key, &error) : MobileNewSession(manifest, key, &error)
+        guard let value else {
             throw error ?? NSError(domain: "iOSEgress", code: 1)
         }
         session = value

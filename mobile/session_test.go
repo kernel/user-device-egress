@@ -1,13 +1,49 @@
 package mobile
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
 )
+
+func TestExpediaPolicyIsOptInAndStillRejectsOtherHosts(t *testing.T) {
+	m, key := testManifest(t)
+	standard, err := NewSession(manifestJSON(t, m), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer standard.Stop()
+	expedia, err := NewExpediaSession(manifestJSON(t, m), key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer expedia.Stop()
+	for _, tc := range []struct {
+		session *Session
+		target  string
+	}{
+		{standard, "www.expedia.com:443"},
+		{expedia, "www.expedia.com.attacker.test:443"},
+		{expedia, "arbitrary.expedia.com:443"},
+		{expedia, "www.expedia.com:80"},
+		{expedia, "127.0.0.1:443"},
+		{expedia, "example.com:443"},
+	} {
+		r := httptest.NewRequest("CONNECT", tc.target, nil)
+		r.Header.Set("Proxy-Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte("session:"+tc.session.password)))
+		w := httptest.NewRecorder()
+		tc.session.proxy.ServeHTTP(w, r)
+		if w.Code != http.StatusForbidden {
+			t.Fatalf("%s: got %d", tc.target, w.Code)
+		}
+	}
+}
 
 func testManifest(t *testing.T) (manifest, string) {
 	t.Helper()

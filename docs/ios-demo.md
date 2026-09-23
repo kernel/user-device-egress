@@ -20,7 +20,7 @@ Requires Xcode 26.5 or newer, an iPhone running iOS 26+, Go 1.26+, a [provisione
 
 This is a developer demo: a phone-held Kernel key can act on its account. A distributed product needs a backend with scoped authorization; do not distribute a preconfigured build or put keys in screenshots.
 
-For presentations, label this **demo-only setup**. The proposed consumer app would register the device through its backend using the app session, without exposing relay servers, QR pairing, or Kernel API keys. That onboarding work is separate from proving background execution.
+For presentations, label this **demo-only setup**. A consumer app would register through its backend without exposing relay servers, QR pairing, or Kernel API keys. The separate [background lab](ios-background-results.md) now has initial locked-phone results; this foreground app intentionally stops when backgrounded.
 
 ## Demo it
 
@@ -43,6 +43,6 @@ Implemented: in-process SSH/CONNECT, pinned SSH host key, QR pairing, Keychain e
 
 **A foreground end-to-end run was user-confirmed on an iPhone Air on September 16, 2026.** This is an initial demo result, not a completed network/lifecycle test matrix. Cellular/NAT64, force-quit, background/lock behavior, and repeated start/stop cycles still require explicit testing. A simulator uses the Mac's connection and is not proof of iPhone egress.
 
-The existing test-host allowlist, private-destination blocking, and 32 active CONNECT streams remain. This is not general browsing or background egress. The literal IPv4 relay and Go resolver need real IPv6-only/NAT64 testing. The [Kernel relay-certificate verification caveat](../README.md#limits) also remains.
+The test-host allowlist, private-destination blocking, and 32-stream cap remain. This foreground app does not provide background egress. The shared core has passed the background lab's initial cellular tests on a reported IPv6-only path; broader carrier/NAT64 coverage remains open. The [relay certificate-verification caveat](../README.md#limits) also remains.
 
 [Foreground plan](ios-foreground-plan.md) · [Background follow-up](ios-background-follow-up.md)

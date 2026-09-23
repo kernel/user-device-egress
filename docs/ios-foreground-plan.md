@@ -1,6 +1,6 @@
-# iPhone egress: foreground feasibility demo
+# Original foreground implementation plan
 
-Status: foreground app implemented; local tests pass; initial end-to-end run user-confirmed on iPhone Air on September 16, 2026. The full network/lifecycle test matrix remains open. See [demo setup](ios-demo.md).
+Historical design plan, retained for implementation rationale. The foreground app is implemented, and a separate background app has since passed initial locked-phone tests. For the current state, see [demo setup](ios-demo.md), [measured results](ios-background-results.md), and [remaining work](ios-background-follow-up.md). The sequencing and estimates below describe the original plan, not outstanding implementation work.
 
 ## Goal and scope
 

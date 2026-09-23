@@ -23,6 +23,31 @@ xcodebuild test -project iOSEgress/iOSEgress.xcodeproj -scheme iOSEgress \
 
 The generated static XCFramework stays under ignored `.local/ios/`; rebuild it after Go changes. Go dependencies/tool versions are pinned in `go.mod`. Swift tests use a fake HTTP transport: they cover bridge validation, proxy/browser requests, cleanup order, lost-create-response recovery, and consent gating without creating cloud resources. Go tests cover the shared CONNECT policy and the deadline adapter required by SSH streams. Follow [the demo guide](docs/ios-demo.md) for real-device verification; simulator success isn't phone-egress evidence.
 
+The separate background lab shares the same static framework and networking/pairing sources. Its offline tests cover conservative timestamp classification, report persistence, pre-start cancellation, and project background-task configuration:
+
+```bash
+xcodebuild test -project iOSEgressBackground/iOSEgressBackground.xcodeproj -scheme iOSEgressBackground \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:iOSEgressBackgroundTests
+```
+
+Use the [background lab guide](docs/ios-background-demo.md) for physical-device measurements; do not interpret simulator tests as background runtime evidence.
+
+## Background lab internals
+
+The foreground app stops on backgrounding; the lab deliberately does not. Continued mode submits a user-triggered task with `.fail` and default CPU/network resources before creating a tunnel. Its handler owns the run. Expiration closes forwarding before scheduling UI work and releases the task without waiting for cloud deletion. Baseline submits no continued-processing task.
+
+The browser runs an independent, cache-disabled IP-check loop. A bounded Node process inside its VM holds an external CDP connection to prevent Kernel standby and writes a heartbeat on CDP acknowledgments. It receives only its browser's CDP URL, never the account API key. Missing/stale observer health invalidates an active run. The observer exits after 450 seconds or browser deletion.
+
+The phone polls every three seconds. Progress counts measured requests, including failures. During the bursty pause, API polling, task-title refreshes, and SSH/route health checks continue without advancing the request count. A fast poll calibrates clocks; background classification adds uncertainty plus two seconds at each boundary. This is not a fully idle-process test.
+
+Credentials retain `WhenUnlockedThisDeviceOnly` Keychain protection and are loaded before Start. Non-secret report/recovery files use `completeUntilFirstUserAuthentication` and are excluded from backup. Recovery preserves uncertain creates and browser-before-proxy deletion. A short UIKit background allowance is used only for cleanup after forwarding stops.
+
+Deadlines: seven-minute cloud-loop check, eight-minute app check, ten-minute Go session, and 600-second browser inactivity timeout. These are not a remote lease: phone timers cannot execute while suspended, and an active CDP observer prevents browser inactivity. Force-quit tests require resource reconciliation. The two-minute CONNECT lifetime and 32-stream limit remain unchanged.
+
+Before device testing, the iPhone build, 14 background unit tests, 11 foreground regression tests, Go race tests, and Go vet passed. Simulator tests do not verify lock-screen file protection or background scheduling. [Device results](docs/ios-background-results.md).
+
+Apple: [task](https://developer.apple.com/documentation/backgroundtasks/bgcontinuedprocessingtask), [submission request](https://developer.apple.com/documentation/backgroundtasks/bgcontinuedprocessingtaskrequest), [WWDC overview](https://developer.apple.com/videos/play/wwdc2025/227/).
+
 ## Live checks
 
 Use an enrolled test device with no other active session. These helper tests stop their own sessions but do not revoke the device or create Kernel resources:
@@ -106,3 +131,12 @@ Certificate renewal and hourly health checks use systemd; external alerting is n
 - The app sends secrets through a control pipe. EOF, Stop, or child failure ends sharing. The proxy watches its parent; the app kills the supervisor's process group after a crash. Simultaneously force-killing both app and supervisor is not a tested cleanup guarantee.
 - Per-device SSH services disable PAM so their children stay in the service cgroup and are terminated on revocation. Keep host-key pinning, destination validation, and forwarding restrictions intact.
 - The Kernel verifier's CLI password argument is briefly visible to local processes. Interrupted API creation may leave resources without a recorded ID; reconcile by the unique name in `result.json`. Never delete a proxy before its browser.
+
+## Teardown
+
+Stop active demos and finish Kernel cleanup first. Revocation permanently reserves the device's old name/port. Destroying the stack deletes the VM, disk, keys, and static IP without a snapshot.
+
+```bash
+./scripts/tenant.sh revoke mac-egress-relay device1
+./scripts/relay.sh destroy mac-egress-relay
+```

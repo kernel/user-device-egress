@@ -15,6 +15,7 @@ struct KernelProxy: Decodable, Sendable {
 struct KernelBrowser: Decodable, Sendable {
     let session_id: String
     let name: String?
+    let cdp_ws_url: String?
 }
 
 struct IPResult: Decodable, Sendable {
@@ -35,7 +36,7 @@ actor KernelAPI {
         self.session = session ?? URLSession(configuration: configuration)
     }
 
-    private func request(_ method: String, _ path: String, body: Data? = nil, allowMissing: Bool = false) async throws -> Data {
+    func request(_ method: String, _ path: String, body: Data? = nil, allowMissing: Bool = false) async throws -> Data {
         guard let url = URL(string: "https://api.onkernel.com" + path) else { throw DemoError("Invalid API path.") }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -60,13 +61,14 @@ actor KernelAPI {
         return try JSONDecoder().decode(KernelProxy.self, from: await request("POST", "/proxies", body: JSONEncoder().encode(Body(name: name, config: config))))
     }
 
-    func createBrowser(name: String, proxyID: String) async throws -> KernelBrowser {
+    func createBrowser(name: String, proxyID: String, timeoutSeconds: Int = 120) async throws -> KernelBrowser {
+        guard (10...600).contains(timeoutSeconds) else { throw DemoError("Invalid browser timeout.") }
         struct Body: Encodable {
             let name: String; let proxy_id: String
-            let headless = false; let timeout_seconds = 120
+            let headless = false; let timeout_seconds: Int
             let viewport = ["width": 1024, "height": 768]
         }
-        return try JSONDecoder().decode(KernelBrowser.self, from: await request("POST", "/browsers", body: JSONEncoder().encode(Body(name: name, proxy_id: proxyID))))
+        return try JSONDecoder().decode(KernelBrowser.self, from: await request("POST", "/browsers", body: JSONEncoder().encode(Body(name: name, proxy_id: proxyID, timeout_seconds: timeoutSeconds))))
     }
 
     func navigate(browserID: String, host: String) async throws -> IPResult {

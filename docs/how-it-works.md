@@ -16,17 +16,19 @@ For an HTTPS page, the browser’s proxy connection reaches HAProxy on the relay
 
 The browser and website negotiate their own TLS session through this byte-forwarding path. Neither the relay nor the phone decrypts website HTTPS content. No website root certificate or system-wide proxy change is required. Relay administrators can still observe proxy credentials and connection metadata.
 
-## What the screen proves
+## Foreground and background demos
 
 The app asks Kernel to navigate between two IP-check websites and compares their responses with fresh direct phone requests. Separately, it requests actual browser screenshots approximately every two seconds. These API calls and screenshot downloads go directly between the phone and Kernel; they are not the browser’s proxied website traffic. Matching IPs, screenshots, and traffic counters make the route visible.
 
-Stop, backgrounding, detected network changes, or the demo deadline close the tunnel. Cleanup deletes the browser before its proxy; interrupted cleanup is journaled in Keychain for retry. Removing an attached proxy first could enable direct egress.
+In the foreground demo, Stop, backgrounding, detected network changes, or the deadline close the tunnel. Cleanup deletes the browser before its proxy; interrupted cleanup is journaled in Keychain for retry. Removing an attached proxy first could enable direct egress.
+
+The separate background lab uses `BGContinuedProcessingTask` for finite diagnostics after lock. Cloud-side requests and an independent observer measure egress without screenshot polling; the phone reports completed requests as progress. [Initial tests](ios-background-results.md) passed on Wi-Fi and cellular, including a pause between bursts. Non-secret recovery files remain writable while locked.
 
 ## Prototype versus product
 
-QR pairing and entering a Kernel key are developer setup, not proposed consumer onboarding. A production integration would register devices through the app’s backend and keep Kernel credentials server-side. Foreground routing works on the demonstrated iPhone Air; background execution remains unproven. Test-host restrictions, network/lifecycle gaps, and the documented Kernel relay-certificate-verification caveat still require attention before production.
+QR pairing and entering a Kernel key are developer setup, not proposed consumer onboarding. A production integration would register devices through its backend and keep Kernel credentials server-side. Initial background results establish feasibility on one iPhone, not repeatability or App Store acceptance. Test-host restrictions, failure handling, a remote session lease, and the documented relay-certificate-verification gap remain production work.
 
-## Sequence
+## Foreground demo sequence
 
 ```mermaid
 sequenceDiagram
