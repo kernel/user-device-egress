@@ -1,8 +1,6 @@
 module mac-egress-relay
 
-go 1.26.0
-
-toolchain go1.26.8
+go 1.27.2
 
 require golang.org/x/crypto v0.57.0
 

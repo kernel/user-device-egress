@@ -12,7 +12,7 @@ The two IP rows compare the browser with a direct request from the phone to the 
 
 ## One-time setup
 
-Requires Xcode 26.5 or newer, an iPhone running iOS 26+, Go 1.26+, a [provisioned relay](../README.md#1-create-a-relay), and a Kernel API key. Framework dependencies are pinned in `go.mod`; Go may download the pinned toolchain on the first build.
+Requires Xcode 26.5 or newer, an iPhone running iOS 26+, Go 1.27+, a [provisioned relay](../README.md#1-create-a-relay), and a Kernel API key. Framework dependencies are pinned in `go.mod`; Go may download the pinned toolchain on the first build.
 
 1. From the repo root, run `./scripts/build-ios-core.sh`. Open `iOSEgress/iOSEgress.xcodeproj`, select your signing team and physical iPhone, unlock the phone, and press **⌘R**. Rebuild the framework after changing the Go core. No VPN, root CA, Network Extension, or background capability is required.
 2. On the Mac, [enable pairing and generate a QR code](../DEVELOPMENT.md#device-pairing). On the phone, tap **Setup → Scan pairing code**, allow Camera access, and scan it. Confirm **Connect**. The app registers itself and saves its connection automatically—no key files or JSON to transfer. Codes expire after 10 minutes and pair only one device; rescanning on the same phone safely retries a lost response.

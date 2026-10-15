@@ -22,7 +22,7 @@ This is a routing prototype, not evidence of improved checkout success. Website 
 
 ## Setup
 
-Requires Xcode (tested with 26.5), Go 1.26+, and a Kernel account. Relay operators also need AWS CLI v2 credentials, jq, SSH, and curl. Run commands from the repository root.
+Requires Xcode (tested with 26.5), Go 1.27+, and a Kernel account. Relay operators also need AWS CLI v2 credentials, jq, SSH, and curl. Run commands from the repository root.
 
 ### 1. Create a relay
 
